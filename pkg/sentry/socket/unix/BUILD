@@ -15,6 +15,7 @@ go_library(
         "//pkg/abi/linux",
         "//pkg/context",
         "//pkg/fspath",
+        "//pkg/marshal",
         "//pkg/refs",
         "//pkg/safemem",
         "//pkg/sentry/arch",
@@ -35,6 +36,5 @@ go_library(
         "//pkg/tcpip",
         "//pkg/usermem",
         "//pkg/waiter",
-        "//tools/go_marshal/marshal",
     ],
 )

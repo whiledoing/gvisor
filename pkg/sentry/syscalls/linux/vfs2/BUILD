@@ -44,6 +44,8 @@ go_library(
         "//pkg/context",
         "//pkg/fspath",
         "//pkg/gohacks",
+        "//pkg/marshal",
+        "//pkg/marshal/primitive",
         "//pkg/sentry/arch",
         "//pkg/sentry/fs/lock",
         "//pkg/sentry/fsbridge",
@@ -72,7 +74,5 @@ go_library(
         "//pkg/syserror",
         "//pkg/usermem",
         "//pkg/waiter",
-        "//tools/go_marshal/marshal",
-        "//tools/go_marshal/primitive",
     ],
 )

@@ -30,6 +30,7 @@ go_library(
         "//pkg/abi/linux",
         "//pkg/context",
         "//pkg/log",
+        "//pkg/marshal",
         "//pkg/sentry/fsimpl/devtmpfs",
         "//pkg/sentry/fsimpl/kernfs",
         "//pkg/sentry/kernel",
@@ -39,7 +40,6 @@ go_library(
         "//pkg/syserror",
         "//pkg/usermem",
         "//pkg/waiter",
-        "//tools/go_marshal/marshal",
         "@org_golang_x_sys//unix:go_default_library",
     ],
 )
@@ -51,6 +51,7 @@ go_test(
     library = ":fuse",
     deps = [
         "//pkg/abi/linux",
+        "//pkg/marshal",
         "//pkg/sentry/fsimpl/testutil",
         "//pkg/sentry/kernel",
         "//pkg/sentry/kernel/auth",
@@ -58,6 +59,5 @@ go_test(
         "//pkg/syserror",
         "//pkg/usermem",
         "//pkg/waiter",
-        "//tools/go_marshal/marshal",
     ],
 )
