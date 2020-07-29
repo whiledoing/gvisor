@@ -199,10 +199,11 @@ func (fs *filesystem) Release() {
 // inode implements kernfs.Inode.
 type inode struct {
 	kernfs.InodeAttrs
+	kernfs.InodeDirectoryNoNewChildren
 	kernfs.InodeNoDynamicLookup
 	kernfs.InodeNotSymlink
-	kernfs.InodeDirectoryNoNewChildren
 	kernfs.OrderedChildren
+	kernfs.InodeNoStatFS
 
 	locks vfs.FileLocks
 
@@ -225,4 +226,10 @@ func (i *inode) Open(ctx context.Context, rp *vfs.ResolvingPath, vfsd *vfs.Dentr
 		return nil, err
 	}
 	return fd.VFSFileDescription(), nil
+}
+
+// StatFS implements kernfs.Inode.StatFS.
+func (i *inode) StatFS(ctx context.Context, fs *vfs.Filesystem) (linux.Statfs, error) {
+	// TODO(gvisor.dev/issues/3413): Complete the implementation of statfs.
+	return vfs.GenericStatFS(linux.FUSE_SUPER_MAGIC), nil
 }
