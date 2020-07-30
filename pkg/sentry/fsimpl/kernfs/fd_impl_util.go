@@ -15,8 +15,6 @@
 package kernfs
 
 import (
-	"math"
-
 	"gvisor.dev/gvisor/pkg/abi/linux"
 	"gvisor.dev/gvisor/pkg/context"
 	fslock "gvisor.dev/gvisor/pkg/sentry/fs/lock"
@@ -29,8 +27,7 @@ import (
 )
 
 // GenericDirectoryFD implements vfs.FileDescriptionImpl for a generic directory
-// inode that uses OrderChildren to track child nodes. GenericDirectoryFD is not
-// compatible with dynamic directories.
+// inode that uses OrderChildren to track child nodes.
 //
 // Note that GenericDirectoryFD holds a lock over OrderedChildren while calling
 // IterDirents callback. The IterDirents callback therefore cannot hash or
@@ -209,9 +206,19 @@ func (fd *GenericDirectoryFD) Seek(ctx context.Context, offset int64, whence int
 	case linux.SEEK_CUR:
 		offset += fd.off
 	case linux.SEEK_END:
-		// TODO(gvisor.dev/issue/1193): This can prevent new files from showing up
-		// if they are added after SEEK_END.
-		offset = math.MaxInt64
+		// For the purposes of SEEK_END, dynamic entries are ignored. This is
+		// the only sensible way to define the "end" of the directory, since
+		// dynamic entries can change arbitrarily from call to call, and this at
+		// least allows new entries added to the end of the file after SEEK_END
+		// to show up as expected.
+		//
+		// Absolute seeking isn't well defined for a general dynamic
+		// directory. If a client filesystem requires specific behaviour, they
+		// should override Seek.
+		fd.children.mu.RLock()
+		offset += int64(len(fd.children.set))
+		offset += 2 // '.' and '..' aren't tracked in children.
+		fd.children.mu.RUnlock()
 	default:
 		return 0, syserror.EINVAL
 	}
