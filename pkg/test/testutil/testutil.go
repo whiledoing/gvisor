@@ -44,7 +44,7 @@ import (
 	"github.com/cenkalti/backoff"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"gvisor.dev/gvisor/pkg/sync"
-	"gvisor.dev/gvisor/runsc/boot"
+	"gvisor.dev/gvisor/runsc/config"
 	"gvisor.dev/gvisor/runsc/specutils"
 )
 
@@ -133,25 +133,23 @@ func Command(logger Logger, args ...string) *Cmd {
 
 // TestConfig returns the default configuration to use in tests. Note that
 // 'RootDir' must be set by caller if required.
-func TestConfig(t *testing.T) *boot.Config {
+func TestConfig(t *testing.T) *config.Config {
 	logDir := os.TempDir()
 	if dir, ok := os.LookupEnv("TEST_UNDECLARED_OUTPUTS_DIR"); ok {
 		logDir = dir + "/"
 	}
-	return &boot.Config{
-		Debug:              true,
-		DebugLog:           path.Join(logDir, "runsc.log."+t.Name()+".%TIMESTAMP%.%COMMAND%"),
-		LogFormat:          "text",
-		DebugLogFormat:     "text",
-		LogPackets:         true,
-		Network:            boot.NetworkNone,
-		Strace:             true,
-		Platform:           "ptrace",
-		FileAccess:         boot.FileAccessExclusive,
-		NumNetworkChannels: 1,
-
-		TestOnlyAllowRunAsCurrentUserWithoutChroot: true,
+	conf, err := config.NewFromFlags()
+	if err != nil {
+		panic(err)
 	}
+	// Change test defaults.
+	conf.Debug = true
+	conf.DebugLog = path.Join(logDir, "runsc.log."+t.Name()+".%TIMESTAMP%.%COMMAND%")
+	conf.LogPackets = true
+	conf.Network = config.NetworkNone
+	conf.Strace = true
+	conf.TestOnlyAllowRunAsCurrentUserWithoutChroot = true
+	return conf
 }
 
 // NewSpecWithArgs creates a simple spec with the given args suitable for use
@@ -203,7 +201,7 @@ func SetupRootDir() (string, func(), error) {
 
 // SetupContainer creates a bundle and root dir for the container, generates a
 // test config, and writes the spec to config.json in the bundle dir.
-func SetupContainer(spec *specs.Spec, conf *boot.Config) (rootDir, bundleDir string, cleanup func(), err error) {
+func SetupContainer(spec *specs.Spec, conf *config.Config) (rootDir, bundleDir string, cleanup func(), err error) {
 	rootDir, rootCleanup, err := SetupRootDir()
 	if err != nil {
 		return "", "", nil, err

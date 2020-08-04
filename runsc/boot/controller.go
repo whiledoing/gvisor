@@ -33,6 +33,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/urpc"
 	"gvisor.dev/gvisor/runsc/boot/pprof"
+	"gvisor.dev/gvisor/runsc/config"
 	"gvisor.dev/gvisor/runsc/specutils"
 )
 
@@ -211,7 +212,7 @@ type StartArgs struct {
 	Spec *specs.Spec
 
 	// Config is the runsc-specific configuration for the sandbox.
-	Conf *Config
+	Conf *config.Config
 
 	// CID is the ID of the container to start.
 	CID string
@@ -387,7 +388,7 @@ func (cm *containerManager) Restore(o *RestoreOpts, _ *struct{}) error {
 
 	// Since we have a new kernel we also must make a new watchdog.
 	dogOpts := watchdog.DefaultOpts
-	dogOpts.TaskTimeoutAction = cm.l.root.conf.WatchdogAction
+	dogOpts.TaskTimeoutAction = cm.l.root.conf.WatchdogAction()
 	dog := watchdog.New(k, dogOpts)
 
 	// Change the loader fields to reflect the changes made when restoring.
