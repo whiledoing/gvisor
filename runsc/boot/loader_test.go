@@ -34,6 +34,7 @@ import (
 	"gvisor.dev/gvisor/pkg/sentry/vfs"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/unet"
+	"gvisor.dev/gvisor/runsc/config"
 	"gvisor.dev/gvisor/runsc/fsgofer"
 )
 
@@ -45,13 +46,16 @@ func init() {
 	}
 }
 
-func testConfig() *Config {
-	return &Config{
-		RootDir:        "unused_root_dir",
-		Network:        NetworkNone,
-		DisableSeccomp: true,
-		Platform:       "ptrace",
+func testConfig() *config.Config {
+	conf, err := config.NewFromFlags()
+	if err != nil {
+		panic(err)
 	}
+	// Change test defaults.
+	conf.RootDir = "unused_root_dir"
+	conf.Network = config.NetworkNone
+	conf.DisableSeccomp = true
+	return conf
 }
 
 // testSpec returns a simple spec that can be used in tests.
@@ -545,7 +549,7 @@ func TestRestoreEnvironment(t *testing.T) {
 						{
 							Dev:        "9pfs-/",
 							Flags:      fs.MountSourceFlags{ReadOnly: true},
-							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true,cache=remote_revalidating",
+							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true",
 						},
 					},
 					"tmpfs": {
@@ -599,7 +603,7 @@ func TestRestoreEnvironment(t *testing.T) {
 						{
 							Dev:        "9pfs-/",
 							Flags:      fs.MountSourceFlags{ReadOnly: true},
-							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true,cache=remote_revalidating",
+							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true",
 						},
 						{
 							Dev:        "9pfs-/dev/fd-foo",
@@ -657,7 +661,7 @@ func TestRestoreEnvironment(t *testing.T) {
 						{
 							Dev:        "9pfs-/",
 							Flags:      fs.MountSourceFlags{ReadOnly: true},
-							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true,cache=remote_revalidating",
+							DataString: "trans=fd,rfdno=0,wfdno=0,privateunixsocket=true",
 						},
 					},
 					"tmpfs": {
