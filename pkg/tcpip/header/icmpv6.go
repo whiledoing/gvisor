@@ -57,6 +57,10 @@ const (
 	// ICMPv6EchoMinimumSize is the minimum size of a valid ICMP echo packet.
 	ICMPv6EchoMinimumSize = 8
 
+	// ICMPv6ErrorHeaderSize is the size of a valid ICMP error packet
+	// They are all 8 bytes long
+	ICMPv6ErrorHeaderSize = ICMPv6MinimumSize
+
 	// ICMPv6DstUnreachableMinimumSize is the minimum size of a valid ICMP
 	// destination unreachable packet.
 	ICMPv6DstUnreachableMinimumSize = ICMPv6MinimumSize
@@ -68,6 +72,10 @@ const (
 	// icmpv6ChecksumOffset is the offset of the checksum field
 	// in an ICMPv6 message.
 	icmpv6ChecksumOffset = 2
+
+	// icmpv6ChecksumOffset is the offset of the pointer
+	// in an ICMPv6 Parameter problem message.
+	icmpv6PointerOffset = 4
 
 	// icmpv6MTUOffset is the offset of the MTU field in an ICMPv6
 	// PacketTooBig message.
@@ -89,9 +97,10 @@ const (
 	NDPHopLimit = 255
 )
 
-// ICMPv6Type is the ICMP type field described in RFC 4443 and friends.
+// ICMPv6Type is the ICMP type field described in RFC 4443 and newer.
 type ICMPv6Type byte
 
+// Values for use in the 'type' field of ICMPv6 packet (RFC 4433)
 const (
 	ICMPv6DstUnreachable ICMPv6Type = 1
 	ICMPv6PacketTooBig   ICMPv6Type = 2
@@ -152,6 +161,11 @@ func (b ICMPv6) Code() ICMPv6Code { return ICMPv6Code(b[1]) }
 
 // SetCode sets the ICMP code field.
 func (b ICMPv6) SetCode(c ICMPv6Code) { b[1] = byte(c) }
+
+// SetPointer sets the pointer field in a Parameter error packet.
+func (b ICMPv6) SetPointer(val uint32) {
+	binary.BigEndian.PutUint32(b[icmpv6PointerOffset:], val)
+}
 
 // Checksum is the ICMP checksum field.
 func (b ICMPv6) Checksum() uint16 {

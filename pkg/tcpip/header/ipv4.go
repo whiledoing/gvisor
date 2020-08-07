@@ -33,6 +33,7 @@ const (
 	checksum           = 10
 	srcAddr            = 12
 	dstAddr            = 16
+	options            = 20
 )
 
 // IPv4Fields contains the fields of an IPv4 packet. It is used to describe the
@@ -81,7 +82,8 @@ type IPv4 []byte
 
 const (
 	// IPv4MinimumSize is the minimum size of a valid IPv4 packet.
-	IPv4MinimumSize = 20
+	// i.e. a packet with no options.
+	IPv4MinimumSize = options
 
 	// IPv4MaximumHeaderSize is the maximum size of an IPv4 header. Given
 	// that there are only 4 bits to represents the header length in 32-bit
@@ -317,7 +319,7 @@ func IsV4MulticastAddress(addr tcpip.Address) bool {
 }
 
 // IsV4LoopbackAddress determines if the provided address is an IPv4 loopback
-// address (belongs to 127.0.0.1/8 subnet).
+// address (belongs to 127.0.0.0/8 subnet). See RFC 1122 section 3.2.1.3
 func IsV4LoopbackAddress(addr tcpip.Address) bool {
 	if len(addr) != IPv4AddressSize {
 		return false
