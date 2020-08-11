@@ -42,10 +42,10 @@ const (
 
 // endpoint implements stack.NetworkEndpoint.
 type endpoint struct {
-	protocol      *protocol
-	nicID         tcpip.NICID
-	linkEP        stack.LinkEndpoint
-	linkAddrCache stack.LinkAddressCache
+	protocol *protocol
+	nicID    tcpip.NICID
+	linkEP   stack.LinkEndpoint
+	nud      stack.NUDHandler
 }
 
 // DefaultTTL is unused for ARP. It implements stack.NetworkEndpoint.
@@ -78,7 +78,7 @@ func (e *endpoint) WritePacket(*stack.Route, *stack.GSO, stack.NetworkHeaderPara
 
 // NetworkProtocolNumber implements stack.NetworkEndpoint.NetworkProtocolNumber.
 func (e *endpoint) NetworkProtocolNumber() tcpip.NetworkProtocolNumber {
-	return e.protocol.Number()
+	return ProtocolNumber
 }
 
 // WritePackets implements stack.NetworkEndpoint.WritePackets.
@@ -99,9 +99,14 @@ func (e *endpoint) HandlePacket(r *stack.Route, pkt *stack.PacketBuffer) {
 	switch h.Op() {
 	case header.ARPRequest:
 		localAddr := tcpip.Address(h.ProtocolAddressTarget())
-		if e.linkAddrCache.CheckLocalAddress(e.nicID, header.IPv4ProtocolNumber, localAddr) == 0 {
+		if r.Stack().CheckLocalAddress(e.nicID, header.IPv4ProtocolNumber, localAddr) == 0 {
 			return // we have no useful answer, ignore the request
 		}
+
+		remoteAddr := tcpip.Address(h.ProtocolAddressSender())
+		remoteLinkAddr := tcpip.LinkAddress(h.HardwareAddressSender())
+		e.nud.HandleProbe(remoteAddr, localAddr, ProtocolNumber, remoteLinkAddr, e.protocol)
+
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{
 			ReserveHeaderBytes: int(e.linkEP.MaxHeaderLength()) + header.ARPSize,
 		})
@@ -113,11 +118,22 @@ func (e *endpoint) HandlePacket(r *stack.Route, pkt *stack.PacketBuffer) {
 		copy(packet.HardwareAddressTarget(), h.HardwareAddressSender())
 		copy(packet.ProtocolAddressTarget(), h.ProtocolAddressSender())
 		_ = e.linkEP.WritePacket(r, nil /* gso */, ProtocolNumber, pkt)
-		fallthrough // also fill the cache from requests
+
 	case header.ARPReply:
 		addr := tcpip.Address(h.ProtocolAddressSender())
 		linkAddr := tcpip.LinkAddress(h.HardwareAddressSender())
-		e.linkAddrCache.AddLinkAddress(e.nicID, addr, linkAddr)
+		// The solicited, override, and isRouter flags are not available for ARP;
+		// they are only available for IPv6 Neighbor Advertisements.
+		e.nud.HandleConfirmation(addr, linkAddr, stack.ReachabilityConfirmationFlags{
+			// Solicited and unsolicited (also referred to as gratuitous) ARP Replies
+			// are handled equivalently to a solicited Neighbor Advertisement.
+			Solicited: true,
+			// If a different link address is received than the one cached, the entry
+			// should always go to Stale.
+			Override: false,
+			// ARP does not distinguish between router and non-router hosts.
+			IsRouter: false,
+		})
 	}
 }
 
@@ -134,12 +150,12 @@ func (*protocol) ParseAddresses(v buffer.View) (src, dst tcpip.Address) {
 	return tcpip.Address(h.ProtocolAddressSender()), ProtocolAddress
 }
 
-func (p *protocol) NewEndpoint(nicID tcpip.NICID, linkAddrCache stack.LinkAddressCache, dispatcher stack.TransportDispatcher, sender stack.LinkEndpoint, st *stack.Stack) stack.NetworkEndpoint {
+func (p *protocol) NewEndpoint(nicID tcpip.NICID, nud stack.NUDHandler, dispatcher stack.TransportDispatcher, sender stack.LinkEndpoint, st *stack.Stack) stack.NetworkEndpoint {
 	return &endpoint{
-		protocol:      p,
-		nicID:         nicID,
-		linkEP:        sender,
-		linkAddrCache: linkAddrCache,
+		nicID:    nicID,
+		linkEP:   sender,
+		nud:      nud,
+		protocol: p,
 	}
 }
 
