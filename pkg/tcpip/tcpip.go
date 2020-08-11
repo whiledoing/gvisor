@@ -1739,3 +1739,48 @@ func DeleteDanglingEndpoint(e Endpoint) {
 // AsyncLoading is the global barrier for asynchronous endpoint loading
 // activities.
 var AsyncLoading sync.WaitGroup
+
+// ICMPReason exports supported reasons to create an ICMP error packet.
+// This does not need to include all ICMP types, just those we need to use in
+// a network protocol agnostic way. Used for both IP versions 4 and 6.
+// New entries here need to be added to the tables in the Network protocol icmp
+// code. It has a single private interface method so nothing outside of this
+// package may implement it.
+type ICMPReason interface {
+	isICMP()
+}
+
+// ICMPReasonTimeExceeded tells the sender that the path took too many hops
+// and the TTL/hop-count field reached 0.
+type ICMPReasonTimeExceeded struct{}
+
+// isICMP implements ICMPReason.isICMP
+func (ICMPReasonTimeExceeded) isICMP() {}
+
+// ICMPParameterProblem tells the packet originator that some fields were not
+// created correctly or were corrupted in transit.
+type ICMPParameterProblem struct{ Pointer uint32 }
+
+// isICMP implements ICMPReason.isICMP
+func (ICMPParameterProblem) isICMP() {}
+
+// ICMPReasonDstUnreachable says that the sender can not send forward the
+// packet to th final destination.
+type ICMPReasonDstUnreachable struct{}
+
+// isICMP implements ICMPReason.isICMP
+func (ICMPReasonDstUnreachable) isICMP() {}
+
+// ICMPReasonPortUnreachable tells the sender that the port requested is not
+// opened on the target.
+type ICMPReasonPortUnreachable struct{}
+
+// isICMP implements ICMPReason.isICMP
+func (ICMPReasonPortUnreachable) isICMP() {}
+
+// ICMPReasonProtoUnreachable means the incoming packet has a protocol field
+// that we don't recognise.
+type ICMPReasonProtoUnreachable struct{ Pointer uint32 }
+
+// isICMP implements ICMPReason.isICMP
+func (ICMPReasonProtoUnreachable) isICMP() {}
