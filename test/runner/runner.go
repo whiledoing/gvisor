@@ -40,8 +40,8 @@ import (
 )
 
 var (
-	debug      = flag.Bool("debug", false, "enable debug logs")
-	strace     = flag.Bool("strace", false, "enable strace logs")
+	debug      = flag.Bool("debug", true, "enable debug logs")
+	strace     = flag.Bool("strace", true, "enable strace logs")
 	platform   = flag.String("platform", "ptrace", "platform to run on")
 	network    = flag.String("network", "none", "network stack to run on (sandbox, host, none)")
 	useTmpfs   = flag.Bool("use-tmpfs", false, "mounts tmpfs for /tmp")
