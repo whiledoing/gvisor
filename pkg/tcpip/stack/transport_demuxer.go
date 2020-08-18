@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/hash/jenkins"
@@ -427,6 +428,7 @@ func (ep *multiPortEndpoint) singleCheckEndpoint(flags ports.Flags) *tcpip.Error
 	if len(ep.endpoints) != 0 {
 		// If it was previously bound, we need to check if we can bind again.
 		if ep.flags.TotalRefs() > 0 && bits&ep.flags.IntersectionRefs() == 0 {
+			log.Infof("conflicting mpendpoint: %+v, endpoints: %#v", ep, ep.endpoints[0])
 			return tcpip.ErrPortInUse
 		}
 	}
