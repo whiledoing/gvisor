@@ -33,3 +33,12 @@ func FromContext(ctx context.Context) *LimitSet {
 	}
 	return nil
 }
+
+// FromContextOrDie returns FromContext(ctx) if the latter is not nil. Otherwise, panic is triggered.
+func FromContextOrDie(ctx context.Context) *LimitSet {
+	l := FromContext(ctx)
+	if l == nil {
+		panic("failed to create limit set from context")
+	}
+	return l
+}
