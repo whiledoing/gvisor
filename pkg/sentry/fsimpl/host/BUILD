@@ -1,12 +1,25 @@
 load("//tools:defs.bzl", "go_library")
+load("//tools/go_generics:defs.bzl", "go_template_instance")
 
 licenses(["notice"])
+
+go_template_instance(
+    name = "inode_refs",
+    out = "inode_refs.go",
+    package = "host",
+    prefix = "inode",
+    template = "//pkg/refs_vfs2:refs_template",
+    types = {
+        "T": "inode",
+    },
+)
 
 go_library(
     name = "host",
     srcs = [
         "control.go",
         "host.go",
+        "inode_refs.go",
         "ioctl_unsafe.go",
         "mmap.go",
         "socket.go",
