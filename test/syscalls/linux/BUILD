@@ -2384,6 +2384,50 @@ cc_library(
 )
 
 cc_library(
+    name = "socket_ipv4_udp_unbound_netlink_test_cases",
+    testonly = 1,
+    srcs = [
+        "socket_ipv4_udp_unbound_netlink.cc",
+    ],
+    hdrs = [
+        "socket_ipv4_udp_unbound_netlink.h",
+    ],
+    deps = [
+        ":ip_socket_test_util",
+        ":socket_netlink_route_util",
+        ":socket_netlink_util",
+        ":socket_test_util",
+        "//test/util:capability_util",
+        "@com_google_absl//absl/memory",
+        gtest,
+        "//test/util:test_util",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "socket_ipv6_udp_unbound_netlink_test_cases",
+    testonly = 1,
+    srcs = [
+        "socket_ipv6_udp_unbound_netlink.cc",
+    ],
+    hdrs = [
+        "socket_ipv6_udp_unbound_netlink.h",
+    ],
+    deps = [
+        ":ip_socket_test_util",
+        ":socket_netlink_route_util",
+        ":socket_netlink_util",
+        ":socket_test_util",
+        "//test/util:capability_util",
+        "@com_google_absl//absl/memory",
+        gtest,
+        "//test/util:test_util",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
     name = "socket_ipv4_udp_unbound_external_networking_test_cases",
     testonly = 1,
     srcs = [
@@ -2713,6 +2757,38 @@ cc_binary(
     deps = [
         ":ip_socket_test_util",
         ":socket_ipv4_udp_unbound_test_cases",
+        ":socket_test_util",
+        "//test/util:test_main",
+        "//test/util:test_util",
+    ],
+)
+
+cc_binary(
+    name = "socket_ipv4_udp_unbound_loopback_netlink_test",
+    testonly = 1,
+    srcs = [
+        "socket_ipv4_udp_unbound_loopback_netlink.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":ip_socket_test_util",
+        ":socket_ipv4_udp_unbound_netlink_test_cases",
+        ":socket_test_util",
+        "//test/util:test_main",
+        "//test/util:test_util",
+    ],
+)
+
+cc_binary(
+    name = "socket_ipv6_udp_unbound_loopback_netlink_test",
+    testonly = 1,
+    srcs = [
+        "socket_ipv6_udp_unbound_loopback_netlink.cc",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":ip_socket_test_util",
+        ":socket_ipv6_udp_unbound_netlink_test_cases",
         ":socket_test_util",
         "//test/util:test_main",
         "//test/util:test_util",

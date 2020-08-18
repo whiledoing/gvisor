@@ -662,6 +662,16 @@ syscall_test(
 )
 
 syscall_test(
+    size = "medium",
+    test = "//test/syscalls/linux:socket_ipv4_udp_unbound_loopback_netlink_test",
+)
+
+syscall_test(
+    size = "medium",
+    test = "//test/syscalls/linux:socket_ipv6_udp_unbound_loopback_netlink_test",
+)
+
+syscall_test(
     test = "//test/syscalls/linux:socket_ip_unbound_test",
 )
 
