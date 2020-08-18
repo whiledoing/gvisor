@@ -31,6 +31,7 @@ import (
 	"gvisor.dev/gvisor/pkg/sentry/vfs"
 	"gvisor.dev/gvisor/pkg/sync"
 	"gvisor.dev/gvisor/pkg/syserror"
+	"gvisor.dev/gvisor/pkg/usermem"
 )
 
 // Name is the default filesystem name.
@@ -314,6 +315,39 @@ type fileDescription struct {
 	// directory that contains the current file/directory. This is only used
 	// if allowRuntimeEnable is set to true.
 	parentMerkleWriter *vfs.FileDescription
+}
+
+// verityFileReader is a helper struct to pass a verity FD to Merkle tree
+// library.
+type verityFileReader struct {
+	fd  *vfs.FileDescription
+	ctx context.Context
+}
+
+// Read implments io.Reader.Read.
+func (vfr verityFileReader) Read(p []byte) (int, error) {
+	dst := usermem.BytesIOSequence(p)
+	ret, err := vfr.fd.Read(vfr.ctx, dst, vfs.ReadOptions{})
+	return int(ret), err
+}
+
+// Seek implements io.ReadSeeker.Seek.
+func (vfr verityFileReader) Seek(offset int64, whence int) (int64, error) {
+	return vfr.fd.Seek(vfr.ctx, offset, int32(whence))
+}
+
+// verityFileWriter is a helper struct to pass a verity FD to Merkle tree
+// library.
+type verityFileWriter struct {
+	fd  *vfs.FileDescription
+	ctx context.Context
+}
+
+// Write implements io.Writer.Write.
+func (vfw verityFileWriter) Write(p []byte) (int, error) {
+	buf := usermem.BytesIOSequence(p)
+	ret, err := vfw.fd.Write(vfw.ctx, buf, vfs.WriteOptions{})
+	return int(ret), err
 }
 
 // Release implements vfs.FileDescriptionImpl.Release.

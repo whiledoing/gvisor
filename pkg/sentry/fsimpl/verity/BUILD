@@ -19,5 +19,6 @@ go_library(
         "//pkg/sentry/vfs",
         "//pkg/sync",
         "//pkg/syserror",
+        "//pkg/usermem",
     ],
 )
